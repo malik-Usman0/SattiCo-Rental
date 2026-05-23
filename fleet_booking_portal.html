@@ -1,0 +1,625 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#141414;--bg3:#1c1c1c;--bg4:#242424;
+  --brd:#2a2a2a;--brd2:#333;
+  --txt:#f0f0f0;--txt2:#999;--txt3:#666;
+  --acc:#e8ff47;--acc2:#c8e000;
+  --red:#ff4d4d;--grn:#47ff8a;--blu:#47b8ff;
+  --radius:10px;--radius-lg:16px;
+}
+body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;}
+h1,h2,h3{font-weight:600;}
+
+/* HEADER */
+.header{background:var(--bg2);border-bottom:1px solid var(--brd);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'DM Mono',monospace;font-size:13px;color:var(--acc);letter-spacing:0.05em;}
+.logo span{color:var(--txt2);}
+.header-stats{display:flex;gap:20px;}
+.hstat{font-family:'DM Mono',monospace;font-size:11px;color:var(--txt3);}
+.hstat b{color:var(--txt2);font-weight:500;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px);}
+.sidebar{background:var(--bg2);border-right:1px solid var(--brd);padding:20px 16px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.main{padding:20px 24px;}
+
+/* SIDEBAR */
+.filter-section{margin-bottom:20px;}
+.filter-label{font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--txt3);text-transform:uppercase;margin-bottom:8px;}
+.filter-reset{font-size:11px;color:var(--acc);cursor:pointer;float:right;font-weight:500;}
+.filter-reset:hover{text-decoration:underline;}
+
+.search-box{width:100%;background:var(--bg3);border:1px solid var(--brd2);border-radius:var(--radius);padding:8px 12px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;margin-bottom:16px;}
+.search-box:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,255,71,0.1);}
+.search-box::placeholder{color:var(--txt3);}
+
+.check-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;}
+.check-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;transition:background 0.15s;}
+.check-item:hover{background:var(--bg3);}
+.check-item input{accent-color:var(--acc);width:14px;height:14px;cursor:pointer;}
+.check-item label{cursor:pointer;font-size:12px;color:var(--txt2);flex:1;}
+.check-item .cnt{font-size:10px;color:var(--txt3);font-family:'DM Mono',monospace;}
+
+.avail-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.avail-btn{padding:6px 4px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg3);color:var(--txt2);font-size:11px;cursor:pointer;text-align:center;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.avail-btn.active-all{border-color:var(--acc);background:rgba(232,255,71,0.08);color:var(--acc);}
+.avail-btn.active-avail{border-color:var(--grn);background:rgba(71,255,138,0.08);color:var(--grn);}
+.avail-btn.active-booked{border-color:var(--red);background:rgba(255,77,77,0.08);color:var(--red);}
+
+/* MAIN TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.result-count{font-size:12px;color:var(--txt3);}
+.result-count b{color:var(--txt);font-weight:500;}
+.sort-select{background:var(--bg3);border:1px solid var(--brd2);border-radius:6px;padding:6px 10px;color:var(--txt2);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;cursor:pointer;}
+
+/* GRID */
+.car-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+
+/* CAR CARD */
+.car-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.car-card:hover{border-color:var(--brd2);background:var(--bg3);transform:translateY(-1px);}
+.car-card.available{border-left:3px solid var(--grn);}
+.car-card.booked{border-left:3px solid var(--red);}
+
+.car-rego{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--acc);letter-spacing:0.05em;}
+.car-make-model{font-size:15px;font-weight:600;color:var(--txt);margin:4px 0 2px;}
+.car-meta{font-size:11px;color:var(--txt3);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.car-company{font-size:10px;color:var(--txt3);margin-top:8px;padding-top:8px;border-top:1px solid var(--brd);font-weight:500;letter-spacing:0.03em;}
+.car-company.df{color:#47b8ff;}
+.car-company.uc{color:#c47aff;}
+.car-company.sa{color:#ff9f47;}
+
+.status-badge{position:absolute;top:12px;right:12px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;letter-spacing:0.05em;font-family:'DM Mono',monospace;}
+.status-badge.avail{background:rgba(71,255,138,0.12);color:var(--grn);border:1px solid rgba(71,255,138,0.25);}
+.status-badge.booked{background:rgba(255,77,77,0.12);color:var(--red);border:1px solid rgba(255,77,77,0.25);}
+
+.car-rate{font-size:12px;color:var(--txt2);margin-top:8px;}
+.car-rate b{color:var(--txt);font-size:14px;font-weight:600;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 20px;color:var(--txt3);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+
+/* MODAL OVERLAY */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal{background:var(--bg2);border:1px solid var(--brd2);border-radius:20px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:20px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.modal-close{background:var(--bg3);border:1px solid var(--brd2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt2);font-size:18px;flex-shrink:0;transition:all 0.15s;}
+.modal-close:hover{background:var(--bg4);color:var(--txt);}
+.modal-body{padding:20px 24px 24px;}
+
+.modal-rego{font-family:'DM Mono',monospace;font-size:11px;color:var(--acc);letter-spacing:0.08em;margin-bottom:4px;}
+.modal-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--txt2);margin-bottom:16px;}
+
+.terms-box{background:var(--bg3);border:1px solid var(--brd2);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.terms-title{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:10px;}
+.terms-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--brd);}
+.terms-row:last-child{border-bottom:none;}
+.tkey{font-size:12px;color:var(--txt3);}
+.tval{font-size:12px;color:var(--txt);font-weight:500;font-family:'DM Mono',monospace;}
+.tval.warn{color:#ffb347;}
+
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.field-label{font-size:11px;color:var(--txt3);margin-bottom:4px;font-weight:500;}
+.field-input{width:100%;background:var(--bg3);border:1px solid var(--brd2);border-radius:var(--radius);padding:9px 12px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+.field-input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,255,71,0.1);}
+
+.tc-check{display:flex;gap:10px;align-items:flex-start;padding:12px;background:var(--bg3);border-radius:var(--radius);margin-bottom:16px;cursor:pointer;}
+.tc-check input{accent-color:var(--acc);margin-top:2px;flex-shrink:0;}
+.tc-check label{font-size:12px;color:var(--txt2);line-height:1.5;cursor:pointer;}
+
+.book-btn{width:100%;padding:14px;background:var(--acc);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;transition:all 0.2s;letter-spacing:0.02em;}
+.book-btn:hover:not(:disabled){background:var(--acc2);}
+.book-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* COLOR SWATCH */
+.color-swatch{width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:inline-block;flex-shrink:0;}
+
+/* COMPANY LEGEND */
+.legend{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt3);}
+.legend-dot{width:8px;height:8px;border-radius:2px;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const {useState,useMemo,useEffect}=React;
+
+const COLOR_MAP={
+  WHI:'#f5f5f5',SIL:'#c0c0c0',BLK:'#222',GRY:'#888',BLU:'#4a90d9',
+  RED:'#e84040',GRN:'#4caf50',CRM:'#f5f0e8',YEL:'#f5c542',
+  ORG:'#f57c00',PUR:'#9c27b0',VITZ:'#c0c0c0'
+};
+
+const RATES={
+  'CAMRY':200,'RAV4':240,'RAV4 H':260,'RAV 4':240,'KLUGER':280,
+  'COROLL':180,'COROLA':180,'YARIS':150,'YARI06':150,'AQUA':160,
+  'VITZ':140,'VITZ B':140,'VITZ H':140,'ECHO':130,'AXIO':150,
+  'VIZ':140,'FALCON':130,'INSIGH':150,'CIVIC':150,'GETZ':120,
+  'ALTO':110,'MICRA':120,'BARINA':120,'3B HAT':150,'3':150,'2':120,
+  'COROLA':180,
+};
+
+const FLEET=[
+  {rego:'2DF7AC',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2022,company:'Driver Flex'},
+  {rego:'2EB8LY',make:'TOYOTA',model:'COROLL',color:'SIL',year:2020,company:'Driver Flex'},
+  {rego:'2DU7SI',make:'TOYOTA',model:'AQUA',color:'RED',year:2012,company:'Driver Flex'},
+  {rego:'YJI672',make:'HONDA',model:'INSIGH',color:'BLK',year:2011,company:'Driver Flex'},
+  {rego:'1VX8KX',make:'TOYOTA',model:'RAV 4',color:'WHI',year:2022,company:'Driver Flex'},
+  {rego:'CPN655',make:'TOYOTA',model:'KLUGER',color:'BLU',year:2023,company:'Driver Flex'},
+  {rego:'2CX8YI',make:'TOYOTA',model:'RAV4',color:'WHI',year:2021,company:'Driver Flex'},
+  {rego:'2DF2TC',make:'TOYOTA',model:'CAMRY',color:'BLK',year:2023,company:'Driver Flex'},
+  {rego:'2CX3UN',make:'TOYOTA',model:'RAV4',color:'WHI',year:2022,company:'Driver Flex'},
+  {rego:'2DD1NF',make:'TOYOTA',model:'RAV4',color:'WHI',year:2019,company:'Driver Flex'},
+  {rego:'2DC8CT',make:'TOYOTA',model:'RAV4 H',color:'BLU',year:2021,company:'Driver Flex'},
+  {rego:'2DB1SQ',make:'TOYOTA',model:'VITZ',color:'SIL',year:2020,company:'Driver Flex'},
+  {rego:'2DE1YS',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2023,company:'Driver Flex'},
+  {rego:'2DC9TI',make:'TOYOTA',model:'COROLL',color:'SIL',year:2020,company:'Driver Flex'},
+  {rego:'2DG9XR',make:'TOYOTA',model:'COROLL',color:'SIL',year:2020,company:'Driver Flex'},
+  {rego:'2DG9JY',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2023,company:'Driver Flex'},
+  {rego:'2DI5MN',make:'TOYOTA',model:'RAV4 H',color:'BLU',year:2021,company:'Driver Flex'},
+  {rego:'2DM7KP',make:'TOYOTA',model:'RAV4',color:'WHI',year:2022,company:'Driver Flex'},
+  {rego:'2DQ7UP',make:'TOYOTA',model:'RAV4 H',color:'BLU',year:2021,company:'Driver Flex'},
+  {rego:'2DQ7UO',make:'TOYOTA',model:'RAV4 H',color:'BLU',year:2021,company:'Driver Flex'},
+  {rego:'DUC170',make:'TOYOTA',model:'KLUGER',color:'SIL',year:2022,company:'Driver Flex'},
+  {rego:'2DW3JL',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2023,company:'Driver Flex'},
+  {rego:'2EA7LF',make:'TOYOTA',model:'YARIS',color:'SIL',year:2020,company:'Driver Flex'},
+  {rego:'1ND4EL',make:'FORD',model:'FALCON',color:'WHI',year:2013,company:'Unity Consulting'},
+  {rego:'1MX7NA',make:'TOYOTA',model:'CAMRY',color:'RED',year:2013,company:'Unity Consulting'},
+  {rego:'1OF1SE',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2013,company:'Unity Consulting'},
+  {rego:'1OF1UP',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2014,company:'Unity Consulting'},
+  {rego:'1CH7DA',make:'TOYOTA',model:'YARIS',color:'BLK',year:2005,company:'Unity Consulting'},
+  {rego:'1QB3OX',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2016,company:'Unity Consulting'},
+  {rego:'1BQ9OP',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2014,company:'Unity Consulting'},
+  {rego:'1JP4SU',make:'TOYOTA',model:'COROLL',color:'RED',year:2010,company:'Unity Consulting'},
+  {rego:'1KH3RH',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2012,company:'Unity Consulting'},
+  {rego:'1SD6DH',make:'TOYOTA',model:'YARIS',color:'SIL',year:2006,company:'Unity Consulting'},
+  {rego:'1SM7XB',make:'MAZDA',model:'3B HAT',color:'GRY',year:2012,company:'Unity Consulting'},
+  {rego:'1UC8PA',make:'MAZDA',model:'2',color:'BLK',year:2005,company:'Unity Consulting'},
+  {rego:'1VK6QW',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2015,company:'Unity Consulting'},
+  {rego:'1VL2BA',make:'HYNDAI',model:'GETZ',color:'SIL',year:2007,company:'Unity Consulting'},
+  {rego:'1VU7PU',make:'SUZUKI',model:'ALTO',color:'WHI',year:2010,company:'Unity Consulting'},
+  {rego:'1VU7DV',make:'TOYOTA',model:'YARIS',color:'BLU',year:2009,company:'Unity Consulting'},
+  {rego:'1VU7DU',make:'TOYOTA',model:'YARIS',color:'SIL',year:2009,company:'Unity Consulting'},
+  {rego:'1VW1KT',make:'NISSAN',model:'MICRA',color:'WHI',year:2014,company:'Unity Consulting'},
+  {rego:'1VZ1NS',make:'TOYOTA',model:'YARIS',color:'SIL',year:2007,company:'Unity Consulting'},
+  {rego:'WHK650',make:'TOYOTA',model:'YARIS',color:'BLU',year:2006,company:'Unity Consulting'},
+  {rego:'1MR7MY',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2015,company:'Unity Consulting'},
+  {rego:'1DK7KN',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2014,company:'Unity Consulting'},
+  {rego:'1XW5RA',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2014,company:'Unity Consulting'},
+  {rego:'2DW4MX',make:'TOYOTA',model:'',color:'BLK',year:2007,company:'Unity Consulting'},
+  {rego:'1VZ4HI',make:'NISSAN',model:'MICRA',color:'CRM',year:2009,company:'Unity Consulting'},
+  {rego:'TIY115',make:'TOYOTA',model:'ECHO',color:'BLU',year:2005,company:'Unity Consulting'},
+  {rego:'1CC9PO',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2015,company:'Unity Consulting'},
+  {rego:'1OJ5VT',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2012,company:'Unity Consulting'},
+  {rego:'1OT3OP',make:'TOYOTA',model:'CAMRY',color:'BLK',year:2014,company:'Unity Consulting'},
+  {rego:'1PE9SK',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2015,company:'Unity Consulting'},
+  {rego:'1PF1BL',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2015,company:'Unity Consulting'},
+  {rego:'1HS3ZW',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2013,company:'Unity Consulting'},
+  {rego:'1PI9SU',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2014,company:'Unity Consulting'},
+  {rego:'1IY1HS',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2015,company:'Unity Consulting'},
+  {rego:'1VQ6GS',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2019,company:'Unity Consulting'},
+  {rego:'YUN555',make:'TOYOTA',model:'YARIS',color:'BLK',year:2006,company:'Unity Consulting'},
+  {rego:'1KC6VO',make:'TOYOTA',model:'YARIS',color:'GRY',year:2006,company:'Unity Consulting'},
+  {rego:'1SE4PD',make:'MAZDA',model:'2',color:'BLU',year:2005,company:'Unity Consulting'},
+  {rego:'2BC9XG',make:'TOYOTA',model:'CAMRY',color:'RED',year:2012,company:'Unity Consulting'},
+  {rego:'1KL5IQ',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2015,company:'Unity Consulting'},
+  {rego:'1VG6OY',make:'MAZDA',model:'3',color:'BLU',year:2010,company:'Unity Consulting'},
+  {rego:'1VK2ZA',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2018,company:'Unity Consulting'},
+  {rego:'1VO5YJ',make:'HOLDEN',model:'BARINA',color:'RED',year:2010,company:'Unity Consulting'},
+  {rego:'1WF2NK',make:'TOYOTA',model:'YARIS',color:'BLK',year:2007,company:'Unity Consulting'},
+  {rego:'1ZY4AN',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2024,company:'Unity Consulting'},
+  {rego:'1ZY4AM',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2024,company:'Unity Consulting'},
+  {rego:'1ZY4AL',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2024,company:'Unity Consulting'},
+  {rego:'2AA5RT',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2024,company:'Unity Consulting'},
+  {rego:'2AA5RU',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2024,company:'Unity Consulting'},
+  {rego:'2AA5SA',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2024,company:'Unity Consulting'},
+  {rego:'2AA5SB',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2024,company:'Unity Consulting'},
+  {rego:'1OS1VO',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'1PF7UZ',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'1LR1HW',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2013,company:'Satti & Co'},
+  {rego:'1TV4FN',make:'TOYOTA',model:'RAV4',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'1WV4WY',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'1WX9WF',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'2CN3TD',make:'TOYOTA',model:'YARIS',color:'GRN',year:2007,company:'Satti & Co'},
+  {rego:'1XS7RC',make:'TOYOTA',model:'YARIS',color:'SIL',year:2007,company:'Satti & Co'},
+  {rego:'1LY6XX',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2016,company:'Satti & Co'},
+  {rego:'1MO6WN',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2016,company:'Satti & Co'},
+  {rego:'1MK9HB',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2016,company:'Satti & Co'},
+  {rego:'1MK9HC',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2016,company:'Satti & Co'},
+  {rego:'1MO9CX',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2016,company:'Satti & Co'},
+  {rego:'1EQ5KN',make:'TOYOTA',model:'YARIS',color:'BLU',year:2007,company:'Satti & Co'},
+  {rego:'1FK2LY',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2015,company:'Satti & Co'},
+  {rego:'2DC2DM',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2015,company:'Satti & Co'},
+  {rego:'2DA6ME',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'2DH2AR',make:'TOYOTA',model:'YARIS',color:'GRY',year:2009,company:'Satti & Co'},
+  {rego:'2CY7BX',make:'TOYOTA',model:'YARIS',color:'SIL',year:2009,company:'Satti & Co'},
+  {rego:'UBA628',make:'HONDA',model:'CIVIC',color:'BLK',year:2006,company:'Satti & Co'},
+  {rego:'2CI1SJ',make:'TOYOTA',model:'KLUGER',color:'SIL',year:2016,company:'Satti & Co'},
+  {rego:'1QB2GR',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'1PN7FG',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2016,company:'Satti & Co'},
+  {rego:'1QG1LK',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2016,company:'Satti & Co'},
+  {rego:'1JE6GM',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2016,company:'Satti & Co'},
+  {rego:'1RG3CT',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2020,company:'Satti & Co'},
+  {rego:'1RC6WI',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2015,company:'Satti & Co'},
+  {rego:'2DA6MD',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2020,company:'Satti & Co'},
+  {rego:'1RZ8VS',make:'TOYOTA',model:'YARIS',color:'WHI',year:2008,company:'Satti & Co'},
+  {rego:'2CI4JT',make:'TOYOTA',model:'YARIS',color:'BLK',year:2007,company:'Satti & Co'},
+  {rego:'1TS1GA',make:'TOYOTA',model:'YARIS',color:'RED',year:2006,company:'Satti & Co'},
+  {rego:'1TU8ME',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'1TZ1YM',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2021,company:'Satti & Co'},
+  {rego:'BQE130',make:'TOYOTA',model:'CAMRY',color:'RED',year:2021,company:'Satti & Co'},
+  {rego:'1UZ9WL',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2017,company:'Satti & Co'},
+  {rego:'1VD1QG',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2017,company:'Satti & Co'},
+  {rego:'1XP5WJ',make:'TOYOTA',model:'YARIS',color:'WHI',year:2007,company:'Satti & Co'},
+  {rego:'1VH2KQ',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'1WM2VB',make:'TOYOTA',model:'YARI06',color:'SIL',year:2010,company:'Satti & Co'},
+  {rego:'1WS5AV',make:'TOYOTA',model:'YARIS',color:'GRY',year:2015,company:'Satti & Co'},
+  {rego:'1WY6HE',make:'TOYOTA',model:'YARIS',color:'BLU',year:2013,company:'Satti & Co'},
+  {rego:'1XI6GU',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'1XM8TI',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2018,company:'Satti & Co'},
+  {rego:'1XQ9VS',make:'TOYOTA',model:'YARIS',color:'BLU',year:2005,company:'Satti & Co'},
+  {rego:'1XQ9PO',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'1XS7RF',make:'TOYOTA',model:'YARIS',color:'BLK',year:2007,company:'Satti & Co'},
+  {rego:'1UA3TU',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2016,company:'Satti & Co'},
+  {rego:'2DX7SM',make:'TOYOTA',model:'COROLA',color:'WHI',year:2020,company:'Satti & Co'},
+  {rego:'1YH2TW',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'1YF6HE',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2019,company:'Satti & Co'},
+  {rego:'1ZI8UM',make:'TOYOTA',model:'CAMRY',color:'BLK',year:2012,company:'Satti & Co'},
+  {rego:'1ZI8UO',make:'TOYOTA',model:'CAMRY',color:'GRY',year:2014,company:'Satti & Co'},
+  {rego:'1ZQ5OQ',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'1ZR5HS',make:'TOYOTA',model:'YARIS',color:'RED',year:2006,company:'Satti & Co'},
+  {rego:'1ZR5IH',make:'TOYOTA',model:'YARIS',color:'SIL',year:2006,company:'Satti & Co'},
+  {rego:'2DF2OX',make:'TOYOTA',model:'CAMRY',color:'BLU',year:2018,company:'Satti & Co'},
+  {rego:'2AR9DN',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2AQ5JL',make:'TOYOTA',model:'RAV4',color:'SIL',year:2020,company:'Satti & Co'},
+  {rego:'2BI9HO',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2BI5FB',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2021,company:'Satti & Co'},
+  {rego:'2BM5YO',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2022,company:'Satti & Co'},
+  {rego:'2BI2DH',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2BY1CA',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2BY1NV',make:'TOYOTA',model:'YARIS',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'1ZI2NZ',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'1ZI2QJ',make:'TOYOTA',model:'CAMRY',color:'RED',year:2020,company:'Satti & Co'},
+  {rego:'1ZL5EQ',make:'TOYOTA',model:'CAMRY',color:'RED',year:2021,company:'Satti & Co'},
+  {rego:'1ZL5EG',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'1ZV1TE',make:'TOYOTA',model:'CAMRY',color:'RED',year:2019,company:'Satti & Co'},
+  {rego:'1ZT3CI',make:'TOYOTA',model:'YARIS',color:'GRY',year:2012,company:'Satti & Co'},
+  {rego:'1ZT3CJ',make:'TOYOTA',model:'YARIS',color:'BLU',year:2012,company:'Satti & Co'},
+  {rego:'1ZY3LJ',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'2AI9ST',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2018,company:'Satti & Co'},
+  {rego:'2BV7OH',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2BG7EX',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2020,company:'Satti & Co'},
+  {rego:'2BD2ZY',make:'TOYOTA',model:'AXIO',color:'BLU',year:2015,company:'Satti & Co'},
+  {rego:'2BE1GT',make:'TOYOTA',model:'VITZ',color:'SIL',year:2019,company:'Satti & Co'},
+  {rego:'2BI2DC',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2022,company:'Satti & Co'},
+  {rego:'2BN2HM',make:'TOYOTA',model:'VITZ',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2BO8KG',make:'TOYOTA',model:'YARIS',color:'SIL',year:2019,company:'Satti & Co'},
+  {rego:'2BO8JY',make:'TOYOTA',model:'YARIS',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2BW6WH',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2021,company:'Satti & Co'},
+  {rego:'2BW6WI',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2BW6XK',make:'TOYOTA',model:'YARIS',color:'SIL',year:2019,company:'Satti & Co'},
+  {rego:'2BX6CD',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2CD6ET',make:'TOYOTA',model:'RAV4',color:'BLU',year:2020,company:'Satti & Co'},
+  {rego:'2CC9GZ',make:'TOYOTA',model:'CAMRY',color:'SIL',year:2022,company:'Satti & Co'},
+  {rego:'2CF4EA',make:'TOYOTA',model:'VITZ',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2CF4EC',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2CF4NH',make:'TOYOTA',model:'RAV4',color:'GRY',year:2020,company:'Satti & Co'},
+  {rego:'2CF7SV',make:'TOYOTA',model:'VITZ B',color:'GRY',year:2019,company:'Satti & Co'},
+  {rego:'2CF2KV',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2CF7TA',make:'TOYOTA',model:'VITZ H',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2CF4LZ',make:'TOYOTA',model:'RAV4',color:'SIL',year:2020,company:'Satti & Co'},
+  {rego:'2CF7TY',make:'TOYOTA',model:'VITZ',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2CF7UO',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2020,company:'Satti & Co'},
+  {rego:'2CI4NL',make:'TOYOTA',model:'VITZ',color:'WHI',year:2019,company:'Satti & Co'},
+  {rego:'2CI5CC',make:'TOYOTA',model:'VITZ',color:'SIL',year:2019,company:'Satti & Co'},
+  {rego:'2CN1QK',make:'TOYOTA',model:'VIZ',color:'SIL',year:2019,company:'Satti & Co'},
+  {rego:'2CL4GI',make:'TOYOTA',model:'RAV4',color:'SIL',year:2021,company:'Satti & Co'},
+  {rego:'2CO6YC',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2CI4SQ',make:'TOYOTA',model:'CAMRY',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2CP9RL',make:'TOYOTA',model:'RAV4',color:'WHI',year:2021,company:'Satti & Co'},
+  {rego:'2CP9SR',make:'TOYOTA',model:'RAV4 H',color:'WHI',year:2022,company:'Satti & Co'},
+  {rego:'2DN6WX',make:'TOYOTA',model:'YARIS',color:'BLK',year:2007,company:'Satti & Co'},
+  {rego:'2DM9FG',make:'TOYOTA',model:'RAV4 H',color:'WHI',year:2022,company:'Satti & Co'},
+  {rego:'2DT7BA',make:'TOYOTA',model:'YARIS',color:'WHI',year:2020,company:'Satti & Co'},
+];
+
+// assign fixed availability (70% available, 30% booked)
+const [FLEET_WITH_STATUS, setFleetData] = useState([]);
+
+useEffect(() => {
+  API.getFleet().then(data => {
+    setFleetData(data.map(car => ({
+      ...car,
+      available: car.Status === 'AVAILABLE',
+      rate: parseInt(car['Daily Rate']) || 150,
+      km: parseInt(car.Odometer) || 0,
+    })));
+  });
+}, []);
+
+const COLOR_LABEL={WHI:'White',SIL:'Silver',BLK:'Black',GRY:'Grey',BLU:'Blue',RED:'Red',GRN:'Green',CRM:'Cream'};
+
+function unique(arr){ return [...new Set(arr)].filter(Boolean).sort(); }
+
+function App(){
+  const [search,setSearch]=useState('');
+  const [companies,setCompanies]=useState([]);
+  const [makes,setMakes]=useState([]);
+  const [models,setModels]=useState([]);
+  const [colors,setColors]=useState([]);
+  const [years,setYears]=useState([]);
+  const [avail,setAvail]=useState('all');
+  const [sort,setSort]=useState('rego');
+  const [modal,setModal]=useState(null);
+  const [pickDate,setPickDate]=useState('');
+  const [agreed,setAgreed]=useState(false);
+  const [booked,setBooked]=useState(false);
+
+  const allCompanies=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.company)),[]);
+  const allMakes=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.make)),[]);
+  const allModels=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.model)),[]);
+  const allColors=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.color)),[]);
+  const allYears=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>String(c.year))).sort((a,b)=>b-a),[]);
+
+  const filtered=useMemo(()=>{
+    let r=FLEET_WITH_STATUS;
+    if(search) r=r.filter(c=>`${c.rego} ${c.make} ${c.model}`.toLowerCase().includes(search.toLowerCase()));
+    if(companies.length) r=r.filter(c=>companies.includes(c.company));
+    if(makes.length) r=r.filter(c=>makes.includes(c.make));
+    if(models.length) r=r.filter(c=>models.includes(c.model));
+    if(colors.length) r=r.filter(c=>colors.includes(c.color));
+    if(years.length) r=r.filter(c=>years.includes(String(c.year)));
+    if(avail==='available') r=r.filter(c=>c.available);
+    if(avail==='booked') r=r.filter(c=>!c.available);
+    if(sort==='year-new') r=[...r].sort((a,b)=>b.year-a.year);
+    else if(sort==='year-old') r=[...r].sort((a,b)=>a.year-b.year);
+    else if(sort==='rate-hi') r=[...r].sort((a,b)=>b.rate-a.rate);
+    else if(sort==='rate-lo') r=[...r].sort((a,b)=>a.rate-b.rate);
+    return r;
+  },[search,companies,makes,models,colors,years,avail,sort]);
+
+  const toggle=(arr,setArr,val)=>setArr(prev=>prev.includes(val)?prev.filter(x=>x!==val):[...prev,val]);
+  const resetAll=()=>{setSearch('');setCompanies([]);setMakes([]);setModels([]);setColors([]);setYears([]);setAvail('all');};
+
+  const availCount=FLEET_WITH_STATUS.filter(c=>c.available).length;
+
+  function openModal(car){
+    if(!car.available)return;
+    setModal(car);setPickDate('');setAgreed(false);setBooked(false);
+  }
+
+  function handleBook(){
+    if(!agreed||!pickDate)return;
+    setBooked(true);
+  }
+
+  function CheckList({items,selected,onToggle,colorFn}){
+    return React.createElement('div',{className:'check-list'},
+      items.map(v=>React.createElement('div',{className:'check-item',key:v,onClick:()=>onToggle(v)},
+        React.createElement('input',{type:'checkbox',readOnly:true,checked:selected.includes(v)}),
+        colorFn && React.createElement('span',{className:'color-swatch',style:{background:colorFn(v)}}),
+        React.createElement('label',null,colorFn?COLOR_LABEL[v]||v:v),
+        React.createElement('span',{className:'cnt'},FLEET_WITH_STATUS.filter(c=>{
+          if(colorFn)return c.color===v;
+          if(items===allCompanies)return c.company===v;
+          if(items===allMakes)return c.make===v;
+          if(items===allModels)return c.model===v;
+          return String(c.year)===v;
+        }).length)
+      ))
+    );
+  }
+
+  const compCls={'Driver Flex':'df','Unity Consulting':'uc','Satti & Co':'sa'};
+
+  return React.createElement(React.Fragment,null,
+    React.createElement('div',{className:'header'},
+      React.createElement('div',{className:'logo'},
+        'FLEET',' ',React.createElement('span',null,'/ RENTAL PORTAL')
+      ),
+      React.createElement('div',{className:'header-stats'},
+        React.createElement('div',{className:'hstat'},React.createElement('b',null,FLEET_WITH_STATUS.length),' vehicles'),
+        React.createElement('div',{className:'hstat'},React.createElement('b',null,availCount),' available'),
+        React.createElement('div',{className:'hstat'},React.createElement('b',null,FLEET_WITH_STATUS.length-availCount),' booked'),
+      )
+    ),
+    React.createElement('div',{className:'layout'},
+      // SIDEBAR
+      React.createElement('div',{className:'sidebar'},
+        React.createElement('input',{className:'search-box',placeholder:'Search rego, make, model...',value:search,onChange:e=>setSearch(e.target.value)}),
+
+        React.createElement('div',{className:'filter-section'},
+          React.createElement('div',{className:'filter-label'},'Availability',
+            React.createElement('span',{className:'filter-reset',onClick:resetAll},'Reset all')
+          ),
+          React.createElement('div',{className:'avail-btns'},
+            React.createElement('div',{className:`avail-btn ${avail==='all'?'active-all':''}`,onClick:()=>setAvail('all')},'All'),
+            React.createElement('div',{className:`avail-btn ${avail==='available'?'active-avail':''}`,onClick:()=>setAvail('available')},'Free'),
+            React.createElement('div',{className:`avail-btn ${avail==='booked'?'active-booked':''}`,onClick:()=>setAvail('booked')},'Booked'),
+          )
+        ),
+
+        React.createElement('div',{className:'filter-section'},
+          React.createElement('div',{className:'filter-label'},'Company'),
+          React.createElement(CheckList,{items:allCompanies,selected:companies,onToggle:v=>toggle(companies,setCompanies,v)})
+        ),
+        React.createElement('div',{className:'filter-section'},
+          React.createElement('div',{className:'filter-label'},'Make'),
+          React.createElement(CheckList,{items:allMakes,selected:makes,onToggle:v=>toggle(makes,setMakes,v)})
+        ),
+        React.createElement('div',{className:'filter-section'},
+          React.createElement('div',{className:'filter-label'},'Model'),
+          React.createElement(CheckList,{items:allModels,selected:models,onToggle:v=>toggle(models,setModels,v)})
+        ),
+        React.createElement('div',{className:'filter-section'},
+          React.createElement('div',{className:'filter-label'},'Colour'),
+          React.createElement(CheckList,{items:allColors,selected:colors,onToggle:v=>toggle(colors,setColors,v),colorFn:c=>COLOR_MAP[c]||'#888'})
+        ),
+        React.createElement('div',{className:'filter-section'},
+          React.createElement('div',{className:'filter-label'},'Year'),
+          React.createElement(CheckList,{items:allYears,selected:years,onToggle:v=>toggle(years,setYears,v)})
+        ),
+      ),
+
+      // MAIN
+      React.createElement('div',{className:'main'},
+        React.createElement('div',{className:'toolbar'},
+          React.createElement('div',{className:'result-count'},
+            React.createElement('b',null,filtered.length),' of ',FLEET_WITH_STATUS.length,' vehicles'
+          ),
+          React.createElement('select',{className:'sort-select',value:sort,onChange:e=>setSort(e.target.value)},
+            React.createElement('option',{value:'rego'},'Sort: Rego'),
+            React.createElement('option',{value:'year-new'},'Newest first'),
+            React.createElement('option',{value:'year-old'},'Oldest first'),
+            React.createElement('option',{value:'rate-hi'},'Rate: High to Low'),
+            React.createElement('option',{value:'rate-lo'},'Rate: Low to High'),
+          )
+        ),
+
+        React.createElement('div',{className:'legend'},
+          React.createElement('div',{className:'legend-item'},React.createElement('div',{className:'legend-dot',style:{background:'#47b8ff'}}),React.createElement('span',null,'Driver Flex')),
+          React.createElement('div',{className:'legend-item'},React.createElement('div',{className:'legend-dot',style:{background:'#c47aff'}}),React.createElement('span',null,'Unity Consulting')),
+          React.createElement('div',{className:'legend-item'},React.createElement('div',{className:'legend-dot',style:{background:'#ff9f47'}}),React.createElement('span',null,'Satti & Co')),
+          React.createElement('div',{className:'legend-item'},React.createElement('div',{className:'legend-dot',style:{background:'#47ff8a'}}),React.createElement('span',null,'Available')),
+          React.createElement('div',{className:'legend-item'},React.createElement('div',{className:'legend-dot',style:{background:'#ff4d4d'}}),React.createElement('span',null,'Booked')),
+        ),
+
+        filtered.length===0
+          ? React.createElement('div',{className:'empty'},
+              React.createElement('div',{className:'empty-icon'},'🚗'),
+              React.createElement('p',null,'No vehicles match your filters.')
+            )
+          : React.createElement('div',{className:'car-grid'},
+              filtered.map(car=>
+                React.createElement('div',{
+                  key:car.rego,
+                  className:`car-card ${car.available?'available':'booked'}`,
+                  onClick:()=>openModal(car),
+                  title:car.available?'Click to book':'Currently booked',
+                },
+                  React.createElement('span',{className:`status-badge ${car.available?'avail':'booked'}`},car.available?'AVAILABLE':'BOOKED'),
+                  React.createElement('div',{className:'car-rego'},car.rego),
+                  React.createElement('div',{className:'car-make-model'},`${car.make} ${car.model||''}`),
+                  React.createElement('div',{className:'car-meta'},
+                    React.createElement('span',{className:'dot',style:{background:COLOR_MAP[car.color]||'#888'}}),
+                    React.createElement('span',null,COLOR_LABEL[car.color]||car.color),
+                    React.createElement('span',{style:{color:'#555'}},`·`),
+                    React.createElement('span',null,car.year),
+                  ),
+                  React.createElement('div',{className:'car-rate'},React.createElement('b',null,`$${car.rate}`),` /day`),
+                  React.createElement('div',{className:`car-company ${compCls[car.company]||''}`,style:{fontSize:'10px'}},car.company),
+                )
+              )
+            )
+      )
+    ),
+
+    // MODAL
+    modal && React.createElement('div',{className:'modal-bg',onClick:e=>{if(e.target.className==='modal-bg'){setModal(null);}}},
+      React.createElement('div',{className:'modal'},
+        React.createElement('div',{className:'modal-header'},
+          React.createElement('div',null,
+            React.createElement('div',{className:'modal-rego'},modal.rego),
+            React.createElement('div',{className:'modal-title'},`${modal.make} ${modal.model||''}`),
+            React.createElement('div',{className:'modal-sub'},`${COLOR_LABEL[modal.color]||modal.color} · ${modal.year} · ${modal.company}`),
+          ),
+          React.createElement('div',{className:'modal-close',onClick:()=>setModal(null)},'×')
+        ),
+        React.createElement('div',{className:'modal-body'},
+          booked
+            ? React.createElement('div',{style:{textAlign:'center',padding:'24px 0'}},
+                React.createElement('div',{style:{fontSize:'40px',marginBottom:'12px'}},'✅'),
+                React.createElement('div',{style:{fontSize:'17px',fontWeight:600,marginBottom:'6px'}},'Booking request sent!'),
+                React.createElement('div',{style:{fontSize:'13px',color:'var(--txt2)'}},`We'll be in touch to confirm your ${modal.rego} booking.`),
+                React.createElement('button',{className:'book-btn',style:{marginTop:'20px'},onClick:()=>{setModal(null);setBooked(false);}},'Close')
+              )
+            : React.createElement(React.Fragment,null,
+                React.createElement('div',{className:'terms-box'},
+                  React.createElement('div',{className:'terms-title'},'Rental terms'),
+                  [
+                    ['Daily rent',`$${modal.rate} AUD`],
+                    ['Bond','$500'],
+                    ['Minimum period','8 weeks'],
+                    ['Notice period','2 weeks'],
+                    ['Excess','$2,500'],
+                    ['Late rental fee','$15 / day'],
+                    ['Late service fee','$50 / day'],
+                    ['After-hours drop-off','+$80'],
+                    ['Max distance','80 km from Melbourne'],
+                    ['Odometer now',`${modal.km.toLocaleString()} km`],
+                  ].map(([k,v])=>
+                    React.createElement('div',{key:k,className:'terms-row'},
+                      React.createElement('span',{className:'tkey'},k),
+                      React.createElement('span',{className:'tval'},v),
+                    )
+                  ),
+                  React.createElement('div',{className:'terms-row'},
+                    React.createElement('span',{className:'tkey'},'Oil & water checks'),
+                    React.createElement('span',{className:'tval warn'},'Weekly — driver liable'),
+                  ),
+                ),
+                React.createElement('div',{className:'field-label'},'Pickup date'),
+                React.createElement('input',{
+                  type:'date',className:'field-input',
+                  style:{marginBottom:'12px'},
+                  value:pickDate,
+                  onChange:e=>setPickDate(e.target.value),
+                  min:new Date().toISOString().slice(0,10),
+                }),
+                React.createElement('div',{className:'tc-check',onClick:()=>setAgreed(!agreed)},
+                  React.createElement('input',{type:'checkbox',readOnly:true,checked:agreed}),
+                  React.createElement('label',null,'I have read and accept all rental terms above, including bond, excess, minimum period, late fees, distance limits, and weekly vehicle check responsibilities.'),
+                ),
+                React.createElement('button',{
+                  className:'book-btn',
+                  disabled:!agreed||!pickDate,
+                  onClick:handleBook,
+                },'Submit booking request →'),
+                React.createElement('div',{style:{fontSize:'11px',color:'var(--txt3)',marginTop:'10px',textAlign:'center'}},'Our team will contact you within 24 hours to confirm and collect your details.'),
+              )
+        )
+      )
+    )
+  );
+}
+
+ReactDOM.render(React.createElement(App),document.getElementById('root'));
+</script>
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0xYrkoyFuOpDmL4PVhNOVcn_nQ7uKYnRz8lGc7skoRItkaZL6BoOBCbj_s2X9gGt3/exec';
+
+const API = {
+  getFleet:    () => fetch(SCRIPT_URL + '?action=getFleet').then(r => r.json()),
+  getBookings: () => fetch(SCRIPT_URL + '?action=getBookings').then(r => r.json()),
+  post: (body) => fetch(SCRIPT_URL, {
+    method: 'POST', body: JSON.stringify(body)
+  }).then(r => r.json()),
+  submitApplication: (data) => API.post({ action: 'submitApplication', ...data }),
+  approveDriver:  (refId, notes) => API.post({ action: 'approveDriver', refId, adminNotes: notes }),
+  rejectDriver:   (refId, reason) => API.post({ action: 'rejectDriver', refId, reason }),
+  updateCarStatus:(rego, status) => API.post({ action: 'updateCarStatus', rego, status }),
+  addCar:    (data) => API.post({ action: 'addCar', ...data }),
+  removeCar: (rego) => API.post({ action: 'removeCar', rego }),
+};
+</script>
+</body>
+</html>
