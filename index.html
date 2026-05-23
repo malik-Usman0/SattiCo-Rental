@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,6 +140,23 @@ h1,h2,h3{font-weight:600;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script>
+/* ── API SETUP MOVED TO TOP ── */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0xYrkoyFuOpDmL4PVhNOVcn_nQ7uKYnRz8lGc7skoRItkaZL6BoOBCbj_s2X9gGt3/exec';
+
+const API = {
+  getFleet:    () => fetch(SCRIPT_URL + '?action=getFleet').then(r => r.json()),
+  getBookings: () => fetch(SCRIPT_URL + '?action=getBookings').then(r => r.json()),
+  post: (body) => fetch(SCRIPT_URL, {
+    method: 'POST', body: JSON.stringify(body)
+  }).then(r => r.json()),
+  submitApplication: (data) => API.post({ action: 'submitApplication', ...data }),
+  approveDriver:  (refId, notes) => API.post({ action: 'approveDriver', refId, adminNotes: notes }),
+  rejectDriver:   (refId, reason) => API.post({ action: 'rejectDriver', refId, reason }),
+  updateCarStatus:(rego, status) => API.post({ action: 'updateCarStatus', rego, status }),
+  addCar:    (data) => API.post({ action: 'addCar', ...data }),
+  removeCar: (rego) => API.post({ action: 'removeCar', rego }),
+};
+
 const {useState,useMemo,useEffect}=React;
 
 const COLOR_MAP={
@@ -342,25 +358,14 @@ const FLEET=[
   {rego:'2DT7BA',make:'TOYOTA',model:'YARIS',color:'WHI',year:2020,company:'Satti & Co'},
 ];
 
-// assign fixed availability (70% available, 30% booked)
-const [FLEET_WITH_STATUS, setFleetData] = useState([]);
-
-useEffect(() => {
-  API.getFleet().then(data => {
-    setFleetData(data.map(car => ({
-      ...car,
-      available: car.Status === 'AVAILABLE',
-      rate: parseInt(car['Daily Rate']) || 150,
-      km: parseInt(car.Odometer) || 0,
-    })));
-  });
-}, []);
-
 const COLOR_LABEL={WHI:'White',SIL:'Silver',BLK:'Black',GRY:'Grey',BLU:'Blue',RED:'Red',GRN:'Green',CRM:'Cream'};
 
 function unique(arr){ return [...new Set(arr)].filter(Boolean).sort(); }
 
 function App(){
+  /* ── HOOKS SAFELY MOVED INSIDE THE COMPONENT ── */
+  const [FLEET_WITH_STATUS, setFleetData] = useState([]);
+  
   const [search,setSearch]=useState('');
   const [companies,setCompanies]=useState([]);
   const [makes,setMakes]=useState([]);
@@ -374,11 +379,41 @@ function App(){
   const [agreed,setAgreed]=useState(false);
   const [booked,setBooked]=useState(false);
 
-  const allCompanies=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.company)),[]);
-  const allMakes=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.make)),[]);
-  const allModels=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.model)),[]);
-  const allColors=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.color)),[]);
-  const allYears=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>String(c.year))).sort((a,b)=>b-a),[]);
+  /* ── USE-EFFECT SAFELY MOVED INSIDE WITH A FALLBACK CATCH ── */
+  useEffect(() => {
+    API.getFleet()
+      .then(data => {
+        if (data && data.length > 0) {
+          setFleetData(data.map(car => ({
+            ...car,
+            available: car.Status === 'AVAILABLE' || car.status === 'available',
+            rate: parseInt(car['Daily Rate']) || 150,
+            km: parseInt(car.Odometer) || 0,
+          })));
+        } else {
+          loadFallbackData();
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load from API, loading local dummy data...", err);
+        loadFallbackData();
+      });
+  }, []);
+
+  function loadFallbackData() {
+    setFleetData(FLEET.map((car, i) => ({
+      ...car,
+      available: i % 3 !== 0, // Roughly 66% available for dummy data testing
+      rate: RATES[car.model] || 150,
+      km: Math.floor(Math.random() * 50000) + 10000 // Random KM
+    })));
+  }
+
+  const allCompanies=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.company)),[FLEET_WITH_STATUS]);
+  const allMakes=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.make)),[FLEET_WITH_STATUS]);
+  const allModels=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.model)),[FLEET_WITH_STATUS]);
+  const allColors=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>c.color)),[FLEET_WITH_STATUS]);
+  const allYears=useMemo(()=>unique(FLEET_WITH_STATUS.map(c=>String(c.year))).sort((a,b)=>b-a),[FLEET_WITH_STATUS]);
 
   const filtered=useMemo(()=>{
     let r=FLEET_WITH_STATUS;
@@ -395,7 +430,7 @@ function App(){
     else if(sort==='rate-hi') r=[...r].sort((a,b)=>b.rate-a.rate);
     else if(sort==='rate-lo') r=[...r].sort((a,b)=>a.rate-b.rate);
     return r;
-  },[search,companies,makes,models,colors,years,avail,sort]);
+  },[FLEET_WITH_STATUS,search,companies,makes,models,colors,years,avail,sort]);
 
   const toggle=(arr,setArr,val)=>setArr(prev=>prev.includes(val)?prev.filter(x=>x!==val):[...prev,val]);
   const resetAll=()=>{setSearch('');setCompanies([]);setMakes([]);setModels([]);setColors([]);setYears([]);setAvail('all');};
@@ -603,23 +638,6 @@ function App(){
 }
 
 ReactDOM.render(React.createElement(App),document.getElementById('root'));
-</script>
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0xYrkoyFuOpDmL4PVhNOVcn_nQ7uKYnRz8lGc7skoRItkaZL6BoOBCbj_s2X9gGt3/exec';
-
-const API = {
-  getFleet:    () => fetch(SCRIPT_URL + '?action=getFleet').then(r => r.json()),
-  getBookings: () => fetch(SCRIPT_URL + '?action=getBookings').then(r => r.json()),
-  post: (body) => fetch(SCRIPT_URL, {
-    method: 'POST', body: JSON.stringify(body)
-  }).then(r => r.json()),
-  submitApplication: (data) => API.post({ action: 'submitApplication', ...data }),
-  approveDriver:  (refId, notes) => API.post({ action: 'approveDriver', refId, adminNotes: notes }),
-  rejectDriver:   (refId, reason) => API.post({ action: 'rejectDriver', refId, reason }),
-  updateCarStatus:(rego, status) => API.post({ action: 'updateCarStatus', rego, status }),
-  addCar:    (data) => API.post({ action: 'addCar', ...data }),
-  removeCar: (rego) => API.post({ action: 'removeCar', rego }),
-};
 </script>
 </body>
 </html>
